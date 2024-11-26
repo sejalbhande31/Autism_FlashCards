@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcards</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-image: url('images/bg.jpg');
+    background-size: cover; 
+    background-repeat: no-repeat; 
+    background-position:center;
+    }
+
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100">
+  <div class="container mx-auto p-4">
+    <h1 class="text-4xl font-bold text-center mb-8" id="categoryTitle"></h1>
+
+    <div class="hidden mt-8" id="flashcards">
+     
+      <div class="text-center" id="flashcardContainer"></div>
+      
+      <div class="flex justify-between items-center mb-4">
+        <!-- Left Arrow -->
+   <i class="left-arrow fas fa-arrow-left text-violet-900 text-6xl cursor-pointer hover:scale-110 hover:text-violet-400 transition-transform duration-200 ease-in-out" onclick="prevFlashcard()"></i>
+   
+   <!-- Right Arrow -->
+   <i class="right-arrow fas fa-arrow-right text-violet-900 text-6xl cursor-pointer hover:scale-110 hover:text-violet-400 transition-transform duration-200 ease-in-out" onclick="nextFlashcard()"></i>
+     </div>
+    </div>
+    <button class="back-button bg-red-500 text-white px-6 py-3 rounded-md text-center font-semibold shadow-lg hover:bg-red-600 hover:shadow-xl transition-all duration-300 ease-in-out"
+    onclick="goBack()" onclick="goBack()">Back to Categories</button>
+
+    <div class="hidden mt-8" id="assessment">
+      <h2 class="match_text text-2xl font-bold text-center">TIME TO PLAY: CHOOSE THE SIMILAR</h2>
+      <div id="questionContainer" class="question text-center"></div>
+      <div id="optionsContainer" class="option flex justify-center mt-4"></div>
+      <div id="feedbackMessage" class="message text-4xl font-bold mt-4"></div>
+      
+      
+    </div>
+
+    <div class="hidden mt-8" id="results">
+      <div class="text-center mb-4">
+        <p class="match_text text-2xl font-bold">You have completed the assessment!</p>
+        <br>
+        <p class="match_text text-2xl font-bold">Assessment Results</p>
+      </div>
+      <div class="text-center">
+        <p class="text-xl" id="correctCount"></p>
+        <p class="text-xl" id="incorrectCount"></p>
+      </div>
+      <canvas id="scoreChart"></canvas>
+      
+
+      
+
+    </div>
+  </div>
+  <script>
+    const flashcardsData = {
+      letters: [
+        { text: 'A', img: 'alphabets/a.jpg' },
+        { text: 'B', img: 'alphabets/b.jpg' },
+        { text: 'C', img: 'alphabets/c.jpg' },
+        { text: 'D', img: 'alphabets/d.jpg' },
+        { text: 'E', img: 'alphabets/e.jpg' },
+        { text: 'F', img: 'alphabets/f.jpg' },
+        { text: 'G', img: 'alphabets/g.jpg' },
+        { text: 'H', img: 'alphabets/h.jpg' },
+        { text: 'I', img: 'alphabets/i.jpg' },
+        { text: 'J', img: 'alphabets/j.jpg' },
+        { text: 'K', img: 'alphabets/k.jpg' },
+        { text: 'L', img: 'alphabets/l.jpg' },
+        { text: 'M', img: 'alphabets/m.jpg' },
+        { text: 'N', img: 'alphabets/n.jpg' },
+        { text: 'O', img: 'alphabets/o.jpg' },
+        { text: 'P', img: 'alphabets/p.jpg' },
+        { text: 'Q', img: 'alphabets/q.jpg' },
+        { text: 'R', img: 'alphabets/r.jpg' },
+        { text: 'S', img: 'alphabets/s.jpg' },
+        { text: 'T', img: 'alphabets/t.jpg' },
+        { text: 'U', img: 'alphabets/u.jpg' },
+        { text: 'V', img: 'alphabets/v.jpg' },
+        { text: 'W', img: 'alphabets/w.jpg' },
+        { text: 'X', img: 'alphabets/x.jpg' },
+        { text: 'Y', img: 'alphabets/y.jpg' },
+        { text: 'Z', img: 'alphabets/z.jpg' }
+      ],
+      numbers: [
+        { text: '0', img: 'numbers/0.jpg' },
+        { text: '1', img: 'numbers/1.jpg' },
+        { text: '2', img: 'numbers/2.jpg' },
+        { text: '3', img: 'numbers/3.jpg' },
+        { text: '4', img: 'numbers/4.jpg' },
+        { text: '5', img: 'numbers/5.jpg' },
+        { text: '6', img: 'numbers/6.jpg' },
+        { text: '7', img: 'numbers/7.jpg' },
+        { text: '8', img: 'numbers/8.jpg' },
+        { text: '9', img: 'numbers/9.jpg' },
+        { text: '10', img: 'numbers/10.jpg' }
+      ],
+      animals: [
+        { text: 'rabbit', img: 'animals/rabbit.jpg' },
+        { text: 'bear', img: 'animals/bear.jpg' },
+        { text: 'aligator', img: 'animals/aligator.jpg' },
+        { text: 'deer', img: 'animals/deer.jpg' },
+        { text: 'zebra', img: 'animals/zebra.jpg' },
+        { text: 'lion', img: 'animals/lion.jpg' },
+        { text: 'tiger', img: 'animals/tiger.jpg' },
+        { text: 'panda', img: 'animals/panda.jpg' },
+        { text: 'cheetah', img: 'animals/cheetah.jpg' },
+        { text: 'fox', img: 'animals/fox.jpg' },
+        { text: 'cow', img: 'animals/cow.jpg' },
+        { text: 'elephant', img: 'animals/elephant.jpg' },
+        { text: 'sheep', img: 'animals/sheep.jpg' },
+        { text: 'monkey', img: 'animals/monkey.jpg' },
+        { text: 'leopard', img: 'animals/leopard.jpg' },
+        { text: 'horse', img: 'animals/horse.jpg' },
+        { text: 'gorilla', img: 'animals/gorilla.jpg' },
+        { text: 'donkey', img: 'animals/donkey.jpg' },
+        { text: 'goat', img: 'animals/goat.jpg' },
+        { text: 'giraffe', img: 'animals/giraffe.jpg' }
+      ],
+      fruits: [
+        { text: 'Apple', img: 'fruits/apple.jpg' },
+        { text: 'Banana', img: 'fruits/banana.jpg' },
+        { text: 'Cherry', img: 'fruits/cherry.jpg' },
+        { text: 'Grapes', img: 'fruits/grapes.jpg' },
+        { text: 'Mango', img: 'fruits/mango.jpg' },
+        { text: 'Kiwi', img: 'fruits/kiwi.jpg' },
+        { text: 'Pear', img: 'fruits/pear.jpg' },
+        { text: 'Papaya', img: 'fruits/papaya.jpg' },
+        { text: 'Pineapple', img: 'fruits/pineapple.jpg' },
+        { text: 'Watermelon', img: 'fruits/watermelon.jpg' },
+        { text: 'Avocado', img: 'fruits/avocado.jpg' },
+        { text: 'Guava', img: 'fruits/guava.jpg' },
+        { text: 'Plum', img: 'fruits/plum.jpg' },
+        { text: 'Blueberry', img: 'fruits/blueberry.jpg' },
+        { text: 'Blackberry', img: 'fruits/blackberry.jpg' }
+      ],
+      food: [
+        { text: 'cake', img: 'foods/cake.jpg' },
+        { text: 'sandwich', img: 'foods/sandwich.jpg' },
+        { text: 'cookies', img: 'foods/cookies.jpg' },
+        { text: 'milk', img: 'foods/milk.jpg' },
+        { text: 'candies', img: 'foods/candies.jpg' },
+        { text: 'chips', img: 'foods/chips.jpg' },
+        { text: 'tea', img: 'foods/tea.jpg' },
+        { text: 'noodles', img: 'foods/noodles.jpg' },
+        { text: 'icecream', img: 'foods/ice cream.jpg' },
+        { text: 'fries', img: 'foods/fries.jpg' },
+        { text: 'pizza', img: 'foods/pizza.jpg' },
+        { text: 'juice', img: 'foods/juice.jpg' },
+        { text: 'cheese', img: 'foods/cheese.jpg' },
+        { text: 'chocolate', img: 'foods/chocolate.jpg' },
+        { text: 'soup', img: 'foods/soup.jpg' }
+      ],
+      school: [
+        { text: 'Notebook', img: 'school/notebook.jpg' },
+        { text: 'Pencil', img: 'school/pencil.jpg' },
+        { text: 'Eraser', img: 'school/eraser.jpg' },
+        { text: 'Ruler', img: 'school/ruler.jpg' },
+        { text: 'Backpack', img: 'school/backpack.jpg' },
+        { text: 'Bookcase', img: 'school/bookcase.jpg' },
+        { text: 'calculator', img: 'school/calculator.jpg' },
+        { text: 'calendar', img: 'school/calendar.jpg' },
+        { text: 'chair', img: 'school/chair.jpg' },
+        { text: 'chalkboard', img: 'school/chalkboard.jpg' },
+        { text: 'color pencils', img: 'school/color pencils.jpg' },
+        { text: 'desk', img: 'school/desk.jpg' },
+        { text: 'globe', img: 'school/globe.jpg' },
+        { text: 'glue', img: 'school/glue.jpg' },
+        { text: 'marker', img: 'school/backpack.jpg' },
+        { text: 'paint set', img: 'school/paint set.jpg' },
+        { text: 'Paper clip', img: 'school/paper clip.jpg' },
+        { text: 'pen', img: 'school/pen.jpg' },
+        { text: 'school bus', img: 'school/school bus.jpg' },
+        { text: 'school', img: 'school/school.jpg' },
+        { text: 'scissors', img: 'school/scissors.jpg' },
+        { text: 'whiteboard', img: 'school/whiteboard.jpg' }
+      ],
+      toys: [
+        { text: 'Ball', img: 'toys/ball.jpg' },
+        { text: 'Balloons', img: 'toys/balloons.jpg' },
+        { text: 'Bicycle', img: 'toys/bicycle.jpg' },
+        { text: 'Blocks', img: 'toys/blocks.jpg' },
+        { text: 'Boat', img: 'toys/boat.jpg' },
+        { text: 'Car', img: 'toys/car.jpg' },
+        { text: 'Doll', img: 'toys/doll.jpg' },
+        { text: 'Robot', img: 'toys/robot.jpg' },
+        { text: 'Scooter', img: 'toys/scooter.jpg' },
+        { text: 'Skateboard', img: 'toys/skateboard.jpg' },
+        { text: 'Toy Truck', img: 'toys/toy truck.jpg' },
+        { text: 'Train', img: 'toys/train.jpg' }
+      ],
+
+      vegetables: [
+        { text: 'Carrot', img: 'vegetables/carrot.jpg' },
+        { text: 'Eggplant', img: 'vegetables/eggplant.jpg' },
+        { text: 'Tomato', img: 'vegetables/tomato.jpg' },
+        { text: 'Potato', img: 'vegetables/potato.jpg' },
+        { text: 'Cucumber', img: 'vegetables/cucumber.jpg' },
+        { text: 'Lemon', img: 'vegetables/lemon.jpg' },
+        { text: 'Lettuce', img: 'vegetables/lettuce.jpg' },
+        { text: 'Onion', img: 'vegetables/onion.jpg' },
+        { text: 'Corn', img: 'vegetables/corn.jpg' },
+        { text: 'Chilli', img: 'vegetables/chilli.jpg' },
+        { text: 'Pumpkin', img: 'vegetables/pumpkin.jpg' },
+        { text: 'Bitter Gourd', img: 'vegetables/bitter gourd.jpg' },
+        { text: 'Turnip', img: 'vegetables/turnip.jpg' },
+        { text: 'Cabbage', img: 'vegetables/cabbage.jpg' }
+      ]
+    };
+
+    let currentCategory = [];
+    let currentIndex = 0;
+    let score = { correct: 0, incorrect: 0 };
+    let currentQuestionIndex = 0;
+    let currentQuestion = null;
+    let totalQuestions = 5; // Set this to the total number of questions
+    let questionsAnswered = 0; // Initialize the counter
+
+    // Get the category from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const category = urlParams.get('category');
+
+    function init() {
+      if (category && flashcardsData[category]) {
+        currentCategory = flashcardsData[category];
+        currentIndex = 0;
+        document.getElementById('flashcards').classList.remove('hidden');
+        document.getElementById('flashcardContainer').innerHTML = generateFlashcardHTML(currentCategory[currentIndex]);
+      } else {
+        alert('Invalid category!');
+        window.location.href = 'index.html'; // Redirect to the main page if invalid
+      }
+    }
+
+    function generateFlashcardHTML(flashcard) {
+      return `
+             <div class=" p-5 text-center">
+                 <img alt="Flashcard with ${flashcard.text}" class="generate_card mx-auto mb-2" height="150" src="${flashcard.img}" width="190"/>
+                 
+             </div>
+         `;
+    }
+
+    function nextFlashcard() {
+      if (currentIndex < currentCategory.length - 1) {
+        currentIndex++;
+        document.getElementById('flashcardContainer').innerHTML = generateFlashcardHTML(currentCategory[currentIndex]);
+        pronounce(currentCategory[currentIndex].text);
+      } else {
+        startAssessment();
+      }
+    }
+
+    function prevFlashcard() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        document.getElementById('flashcardContainer').innerHTML = generateFlashcardHTML(currentCategory[currentIndex]);
+        pronounce(currentCategory[currentIndex].text);
+      }
+    }
+
+    function goBack() {
+      window.location.href = 'index.html'; // Redirect to the main page
+    }
+
+    function pronounce(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      speechSynthesis.speak(utterance);
+      document.getElementById('pronouncedText').innerText = text;
+    }
+
+    function startAssessment() {
+      document.getElementById('flashcards').classList.add('hidden');
+      document.getElementById('assessment').classList.remove('hidden');
+      currentQuestionIndex = 0;
+      score = { correct: 0, incorrect: 0 };
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      if (questionsAnswered >= totalQuestions) {
+        displayResults(); // Display results if 5 questions are answered
+        return;
+      }
+
+      currentQuestion = getRandomFlashcard();
+      displayQuestion(currentQuestion);
+      questionsAnswered++; // Increment only after displaying the question
+    }
+
+    function getRandomFlashcard() {
+      const randomIndex = Math.floor(Math.random() * currentCategory.length);
+      return currentCategory[randomIndex];
+    }
+
+    function displayQuestion(question) {
+      document.getElementById('questionContainer').innerHTML = `
+            
+            <img alt="Flashcard" class="mx-auto mb-2" height="150" src="${question.img}" width="150"/>
+         `;
+      displayOptions(question);
+    }
+
+    function displayOptions(correctQuestion) {
+      const options = [correctQuestion];
+      while (options.length < 4) {
+        const randomOption = getRandomFlashcard();
+        if (!options.includes(randomOption)) {
+          options.push(randomOption);
+        }
+      }
+      options.sort(() => Math.random() - 0.5); // Shuffle options
+
+      const optionsContainer = document.getElementById('optionsContainer');
+      optionsContainer.innerHTML = ''; // Clear previous options
+      options.forEach(option => {
+        const button = document.createElement('button');
+        button.className = 'bg-white-500 px-4 py-2 w-30 h-40 rounded mx-2 flex flex-col items-center';
+        button.onclick = () => checkAnswer(option, correctQuestion);
+
+        // Create an image element
+        const img = document.createElement('img');
+        img.src = option.img; // Use the image from the option
+        img.alt = option.text; // Set alt text for accessibility
+        img.className = 'h-20 w-20 mb-2'; // Set size for the image
+
+        // Append image to the button
+        button.appendChild(img);
+        optionsContainer.appendChild(button);
+      });
+    }
+
+    function checkAnswer(selectedOption, correctQuestion) {
+      const feedbackMessage = document.getElementById('feedbackMessage');
+      if (selectedOption.text === correctQuestion.text) {
+        score.correct++;
+        feedbackMessage.innerText = "Correct!";
+        feedbackMessage.style.color = "green"; // Optional: Change color for correct answer
+      } else {
+        score.incorrect++;
+        feedbackMessage.innerText = "Incorrect!";
+        feedbackMessage.style.color = "red"; // Optional: Change color for incorrect answer
+      }
+
+      // Clear the feedback message after a short delay
+      setTimeout(() => {
+        feedbackMessage.innerText = ""; // Clear the message
+        nextQuestion();
+      }, 1000); // Delay for 1 second before showing the next question
+    }
+
+    function displayResults() {
+  document.getElementById('assessment').classList.add('hidden');
+  document.getElementById('results').classList.remove('hidden');
+  document.getElementById('correctCount').innerText = `Correct Answers: ${score.correct}`;
+      document.getElementById('incorrectCount').innerText = `Incorrect Answers: ${score.incorrect}`;
+ 
+  
+  const ctx = document.getElementById('scoreChart').getContext('2d');
+  canvas.width = 300;  // Set the desired width
+canvas.height = 150; // Set the desired height
+  new Chart(ctx, {
+    type: 'bar',  // Change to 'bar'
+    data: {
+      labels: ['Correct', 'Incorrect'],  // Labels for the bars
+      datasets: [{
+        label: 'Score',
+        data: [score.correct, score.incorrect],  // Data for the bars
+        backgroundColor: ['#36A2EB', '#FF6384'],  // Colors for the bars
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true  // Start the y-axis at zero
+        }
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+      }
+    }
+  });
+}
+
+    function hideResults() {
+      document.getElementById('results').classList.add('hidden');
+      goBack(); // Redirect to the main page or reset the game
+    }
+
+  
+    window.onload = init; // Initialize the page when it loads
+  </script>
+</body>
+
+</html>
